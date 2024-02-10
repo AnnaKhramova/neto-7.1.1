@@ -1,10 +1,12 @@
 import java.util.*;
+import java.util.concurrent.*;
 
 public class Main {
 
-    public static void main(String[] args) throws InterruptedException {
-        List<Thread> threads = new ArrayList<>();
-        Runnable logic;
+    public static void main(String[] args) throws InterruptedException, ExecutionException {
+        final ExecutorService threadPool = Executors.newFixedThreadPool(25);
+        List<Callable<Integer>> calls = new ArrayList<>();
+        Callable<Integer> logic;
         for (int ii = 0; ii < 25; ii++) {
             String text = generateText("aab", 30_000);
             logic = () -> {
@@ -27,20 +29,25 @@ public class Main {
                     }
                 }
                 System.out.println(text.substring(0, 100) + " -> " + maxSize);
+                return Integer.valueOf(maxSize);
             };
-            threads.add(new Thread(logic));
+            calls.add(logic);
         }
 
+        Integer max = Integer.MIN_VALUE;
+
         long startTs = System.currentTimeMillis(); // start time
-        for (Thread thread : threads) {
-            thread.start(); // зависаем, ждём когда поток объект которого лежит в thread завершится
-        }
-        for (Thread thread : threads) {
-            thread.join(); // зависаем, ждём когда поток объект которого лежит в thread завершится
+        final List<Future<Integer>> tasks = threadPool.invokeAll(calls);
+        for (Future<Integer> task : tasks) {
+            final Integer result = task.get();
+            if (result > max) {
+                max = result;
+            }
         }
         long endTs = System.currentTimeMillis(); // end time
 
         System.out.println("Time: " + (endTs - startTs) + "ms");
+        System.out.println("Max interval: " + max);
     }
 
     public static String generateText(String letters, int length) {

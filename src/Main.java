@@ -33,7 +33,7 @@ public class Main {
 
         long startTs = System.currentTimeMillis(); // start time
         for (Thread thread : threads) {
-            thread.start(); // зависаем, ждём когда поток объект которого лежит в thread завершится
+            thread.start();
         }
         for (Thread thread : threads) {
             thread.join(); // зависаем, ждём когда поток объект которого лежит в thread завершится
